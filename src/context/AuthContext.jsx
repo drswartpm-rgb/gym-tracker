@@ -90,6 +90,16 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const updateDisplayName = async (displayName) => {
+    try {
+      await updateProfile(auth.currentUser, { displayName })
+      setUser({ ...auth.currentUser })
+      return { success: true }
+    } catch (error) {
+      return { error: getErrorMessage(error.code) }
+    }
+  }
+
   const signOut = async () => {
     try {
       await firebaseSignOut(auth)
@@ -106,7 +116,8 @@ export function AuthProvider({ children }) {
     signInWithEmail,
     signUpWithEmail,
     resetPassword,
-    signOut
+    signOut,
+    updateDisplayName
   }
 
   return (

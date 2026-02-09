@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuth } from '../context/AuthContext.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
 import Header from '../components/common/Header.jsx'
 import Button from '../components/common/Button.jsx'
@@ -6,10 +7,25 @@ import Modal from '../components/common/Modal.jsx'
 import { muscleGroups } from '../services/exerciseService.js'
 
 export default function Settings() {
+  const { user, updateDisplayName } = useAuth()
   const { units, setUnits, customExercises, addCustomExercise, deleteCustomExercise, loading } = useSettings()
   const [showAddModal, setShowAddModal] = useState(false)
   const [newExercise, setNewExercise] = useState({ name: '', muscleGroup: 'Chest' })
   const [saving, setSaving] = useState(false)
+  const [displayName, setDisplayName] = useState(user?.displayName || '')
+  const [savingName, setSavingName] = useState(false)
+
+  const handleSaveName = async () => {
+    if (!displayName.trim()) return
+    setSavingName(true)
+    try {
+      await updateDisplayName(displayName.trim())
+    } catch (err) {
+      console.error('Failed to update display name:', err)
+    } finally {
+      setSavingName(false)
+    }
+  }
 
   const handleUnitChange = async (newUnits) => {
     try {
@@ -62,6 +78,26 @@ export default function Settings() {
       <Header title="Settings" showBack showSettings={false} />
 
       <main className="flex-1 max-w-lg mx-auto w-full px-5 py-6 space-y-6">
+        {/* Display Name */}
+        <section className="glass-card p-5 animate-fade-in">
+          <h2 className="font-bold text-lg mb-4 text-white">Display Name</h2>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Enter your name"
+              className="flex-1 px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-all"
+            />
+            <Button
+              onClick={handleSaveName}
+              disabled={!displayName.trim() || displayName.trim() === (user?.displayName || '') || savingName}
+            >
+              {savingName ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </section>
+
         {/* Unit Preference */}
         <section className="glass-card p-5 animate-fade-in">
           <h2 className="font-bold text-lg mb-4 text-white">Weight Unit</h2>
