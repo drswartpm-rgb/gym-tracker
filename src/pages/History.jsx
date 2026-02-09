@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import Header from '../components/common/Header.jsx'
 import WorkoutList from '../components/history/WorkoutList.jsx'
-import { getWorkouts, deleteWorkout } from '../services/workoutService.js'
+import { getWorkouts, deleteWorkout, updateWorkoutDate } from '../services/workoutService.js'
 
 export default function History() {
   const [workouts, setWorkouts] = useState([])
@@ -30,6 +30,20 @@ export default function History() {
 
     fetchWorkouts()
   }, [user])
+
+  const handleUpdateDate = async (workoutId, newDate) => {
+    try {
+      await updateWorkoutDate(user.uid, workoutId, newDate)
+      setWorkouts(prev =>
+        prev
+          .map(w => w.id === workoutId ? { ...w, date: new Date(newDate) } : w)
+          .sort((a, b) => b.date - a.date)
+      )
+    } catch (err) {
+      setError('Failed to update workout date')
+      console.error(err)
+    }
+  }
 
   const handleDelete = async (workoutId) => {
     try {
@@ -76,6 +90,7 @@ export default function History() {
         <WorkoutList
           workouts={workouts}
           onDelete={handleDelete}
+          onUpdateDate={handleUpdateDate}
           loading={loading}
         />
       </main>

@@ -4,6 +4,7 @@ import {
   addDoc,
   getDocs,
   deleteDoc,
+  updateDoc,
   serverTimestamp
 } from 'firebase/firestore'
 import { db } from './firebase.js'
@@ -49,6 +50,11 @@ export async function getWorkouts(userId) {
 export async function deleteWorkout(userId, workoutId) {
   const workoutRef = doc(db, 'users', userId, 'workouts', workoutId)
   await deleteDoc(workoutRef)
+}
+
+export async function updateWorkoutDate(userId, workoutId, newDate) {
+  const workoutRef = doc(db, 'users', userId, 'workouts', workoutId)
+  await updateDoc(workoutRef, { date: new Date(newDate).toISOString() })
 }
 
 export async function getLastWorkoutByMuscleGroup(userId) {

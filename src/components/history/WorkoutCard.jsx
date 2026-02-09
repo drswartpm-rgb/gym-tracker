@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useSettings } from '../../context/SettingsContext.jsx'
 
-export default function WorkoutCard({ workout, onDelete }) {
+export default function WorkoutCard({ workout, onDelete, onUpdateDate }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editingDate, setEditingDate] = useState(false)
+  const [newDate, setNewDate] = useState('')
   const { units } = useSettings()
 
   const formatDate = (date) => {
@@ -24,6 +26,26 @@ export default function WorkoutCard({ workout, onDelete }) {
   const totalSets = workout.exercises.reduce((sum, ex) => sum + ex.sets.length, 0)
   const exerciseCount = workout.exercises.length
 
+  const handleEditDate = (e) => {
+    e.stopPropagation()
+    const d = new Date(workout.date)
+    setNewDate(d.toISOString().split('T')[0])
+    setEditingDate(true)
+  }
+
+  const handleSaveDate = (e) => {
+    e.stopPropagation()
+    if (newDate) {
+      onUpdateDate(workout.id, newDate)
+    }
+    setEditingDate(false)
+  }
+
+  const handleCancelDate = (e) => {
+    e.stopPropagation()
+    setEditingDate(false)
+  }
+
   const handleDelete = () => {
     if (confirmDelete) {
       onDelete(workout.id)
@@ -41,7 +63,32 @@ export default function WorkoutCard({ workout, onDelete }) {
       >
         <div className="flex justify-between items-start">
           <div>
-            <div className="text-lg font-bold text-white">{formatDate(workout.date)}</div>
+            <div className="text-lg font-bold text-white flex items-center gap-2">
+              {editingDate ? (
+                <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                  <input
+                    type="date"
+                    value={newDate}
+                    onChange={e => setNewDate(e.target.value)}
+                    className="bg-slate-800 text-white text-sm rounded-lg px-2 py-1 border border-slate-600 focus:border-cyan-500 outline-none"
+                  />
+                  <button onClick={handleSaveDate} className="text-xs text-cyan-400 hover:text-cyan-300 font-medium">Save</button>
+                  <button onClick={handleCancelDate} className="text-xs text-slate-500 hover:text-slate-400 font-medium">Cancel</button>
+                </div>
+              ) : (
+                <>
+                  {formatDate(workout.date)}
+                  <button
+                    onClick={handleEditDate}
+                    className="text-slate-600 hover:text-cyan-400 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </div>
             <div className="text-sm text-slate-500 mt-1">
               {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''} · {totalSets} set{totalSets !== 1 ? 's' : ''}
             </div>

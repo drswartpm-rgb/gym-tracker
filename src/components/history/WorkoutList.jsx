@@ -1,6 +1,6 @@
 import WorkoutCard from './WorkoutCard.jsx'
 
-export default function WorkoutList({ workouts, onDelete, loading }) {
+export default function WorkoutList({ workouts, onDelete, onUpdateDate, loading }) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
@@ -31,6 +31,7 @@ export default function WorkoutList({ workouts, onDelete, loading }) {
           <WorkoutCard
             workout={workout}
             onDelete={onDelete}
+            onUpdateDate={onUpdateDate}
           />
         </div>
       ))}
