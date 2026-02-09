@@ -29,13 +29,17 @@ export default function LandingPage() {
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col relative overflow-hidden">
-        {/* Anatomical Body Background */}
+        {/* Video Background */}
         <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
-          <img
-            src="/images/body.jpg"
-            alt=""
-            className="h-[85vh] max-h-[800px] w-auto object-contain animate-body-float select-none pointer-events-none"
-          />
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover opacity-40 select-none pointer-events-none"
+          >
+            <source src="/videos/armcurl.mp4" type="video/mp4" />
+          </video>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
