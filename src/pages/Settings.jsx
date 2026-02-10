@@ -1,19 +1,70 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useSettings } from '../context/SettingsContext.jsx'
 import Header from '../components/common/Header.jsx'
 import Button from '../components/common/Button.jsx'
 import Modal from '../components/common/Modal.jsx'
-import { muscleGroups } from '../services/exerciseService.js'
+import { muscleGroups, getExercisesByMuscleGroup } from '../services/exerciseService.js'
+import { DndContext, closestCenter, PointerSensor, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+
+function SortableExerciseItem({ exercise }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: exercise.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
+  }
+
+  return (
+    <li ref={setNodeRef} style={style} className="py-3 px-4 flex items-center gap-3 border-b border-slate-700/30 last:border-b-0">
+      <button {...attributes} {...listeners} className="text-slate-600 hover:text-slate-400 cursor-grab active:cursor-grabbing touch-none">
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
+        </svg>
+      </button>
+      <span className="font-medium text-white">{exercise.name}</span>
+      {exercise.id.startsWith('custom-') && (
+        <span className="text-xs text-cyan-500/70 ml-auto">custom</span>
+      )}
+    </li>
+  )
+}
 
 export default function Settings() {
   const { user, updateDisplayName } = useAuth()
-  const { units, setUnits, customExercises, addCustomExercise, deleteCustomExercise, loading } = useSettings()
+  const { units, setUnits, customExercises, addCustomExercise, deleteCustomExercise, exerciseOrder, setExerciseOrder, loading } = useSettings()
+
   const [showAddModal, setShowAddModal] = useState(false)
   const [newExercise, setNewExercise] = useState({ name: '', muscleGroup: 'Chest' })
   const [saving, setSaving] = useState(false)
   const [displayName, setDisplayName] = useState(user?.displayName || '')
   const [savingName, setSavingName] = useState(false)
+  const [selectedGroup, setSelectedGroup] = useState(muscleGroups[0])
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  )
+
+  const groupedExercises = useMemo(() => {
+    return getExercisesByMuscleGroup(customExercises, exerciseOrder)
+  }, [customExercises, exerciseOrder])
+
+  const selectedExercises = groupedExercises[selectedGroup] || []
+
+  const handleOrderDragEnd = (event) => {
+    const { active, over } = event
+    if (active.id !== over?.id) {
+      const oldIndex = selectedExercises.findIndex(e => e.id === active.id)
+      const newIndex = selectedExercises.findIndex(e => e.id === over.id)
+      const reordered = arrayMove(selectedExercises, oldIndex, newIndex)
+      setExerciseOrder(selectedGroup, reordered.map(e => e.id))
+    }
+  }
 
   const handleSaveName = async () => {
     if (!displayName.trim()) return
@@ -160,6 +211,36 @@ export default function Settings() {
                 </li>
               ))}
             </ul>
+          )}
+        </section>
+
+        {/* Exercise Order */}
+        <section className="glass-card p-5 animate-fade-in animate-fade-in-delay-2">
+          <h2 className="font-bold text-lg mb-4 text-white">Exercise Order</h2>
+          <p className="text-slate-500 text-sm mb-4">Drag to reorder exercises within each muscle group.</p>
+
+          <select
+            value={selectedGroup}
+            onChange={(e) => setSelectedGroup(e.target.value)}
+            className="w-full px-4 py-3 mb-4 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 transition-all"
+          >
+            {muscleGroups.map(group => (
+              <option key={group} value={group}>{group}</option>
+            ))}
+          </select>
+
+          {selectedExercises.length === 0 ? (
+            <p className="text-slate-500 text-sm">No exercises for this muscle group.</p>
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleOrderDragEnd}>
+              <SortableContext items={selectedExercises.map(e => e.id)} strategy={verticalListSortingStrategy}>
+                <ul className="rounded-xl border border-slate-700/50 overflow-hidden">
+                  {selectedExercises.map(exercise => (
+                    <SortableExerciseItem key={exercise.id} exercise={exercise} />
+                  ))}
+                </ul>
+              </SortableContext>
+            </DndContext>
           )}
         </section>
       </main>

@@ -4,7 +4,7 @@ export function getAllExercises(customExercises = []) {
   return [...defaultExercises, ...customExercises]
 }
 
-export function getExercisesByMuscleGroup(customExercises = []) {
+export function getExercisesByMuscleGroup(customExercises = [], exerciseOrder = {}) {
   const allExercises = getAllExercises(customExercises)
   const grouped = {}
 
@@ -23,6 +23,19 @@ export function getExercisesByMuscleGroup(customExercises = []) {
       }
     }
   })
+
+  // Apply custom ordering per group
+  for (const group of Object.keys(grouped)) {
+    const order = exerciseOrder[group]
+    if (order && order.length > 0) {
+      const orderMap = new Map(order.map((id, i) => [id, i]))
+      grouped[group].sort((a, b) => {
+        const aIdx = orderMap.has(a.id) ? orderMap.get(a.id) : Infinity
+        const bIdx = orderMap.has(b.id) ? orderMap.get(b.id) : Infinity
+        return aIdx - bIdx
+      })
+    }
+  }
 
   return grouped
 }

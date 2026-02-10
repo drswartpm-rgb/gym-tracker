@@ -8,6 +8,7 @@ const SettingsContext = createContext()
 const initialState = {
   units: 'lbs',
   customExercises: [],
+  exerciseOrder: {},
   loading: true
 }
 
@@ -26,6 +27,14 @@ function settingsReducer(state, action) {
       return {
         ...state,
         customExercises: state.customExercises.filter(e => e.id !== action.payload)
+      }
+    case 'SET_EXERCISE_ORDER':
+      return {
+        ...state,
+        exerciseOrder: {
+          ...state.exerciseOrder,
+          [action.payload.group]: action.payload.orderedIds
+        }
       }
     case 'SET_LOADING':
       return { ...state, loading: action.payload }
@@ -79,7 +88,8 @@ export function SettingsProvider({ children }) {
 
     const settings = {
       units: newSettings.units ?? state.units,
-      customExercises: newSettings.customExercises ?? state.customExercises
+      customExercises: newSettings.customExercises ?? state.customExercises,
+      exerciseOrder: newSettings.exerciseOrder ?? state.exerciseOrder
     }
 
     try {
@@ -114,11 +124,18 @@ export function SettingsProvider({ children }) {
     })
   }
 
+  const setExerciseOrder = (group, orderedIds) => {
+    dispatch({ type: 'SET_EXERCISE_ORDER', payload: { group, orderedIds } })
+    const newExerciseOrder = { ...state.exerciseOrder, [group]: orderedIds }
+    saveSettings({ exerciseOrder: newExerciseOrder })
+  }
+
   const value = {
     ...state,
     setUnits,
     addCustomExercise,
-    deleteCustomExercise
+    deleteCustomExercise,
+    setExerciseOrder
   }
 
   return (

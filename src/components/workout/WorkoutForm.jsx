@@ -12,7 +12,7 @@ export default function WorkoutForm({ onSave, saving = false }) {
   const [numSets, setNumSets] = useState(null)
   const [setsData, setSetsData] = useState([])
   const [lastWorkouts, setLastWorkouts] = useState({})
-  const { units, customExercises } = useSettings()
+  const { units, customExercises, exerciseOrder } = useSettings()
   const { user } = useAuth()
 
   useEffect(() => {
@@ -22,8 +22,8 @@ export default function WorkoutForm({ onSave, saving = false }) {
   }, [user])
 
   const groupedExercises = useMemo(() => {
-    return getExercisesByMuscleGroup(customExercises)
-  }, [customExercises])
+    return getExercisesByMuscleGroup(customExercises, exerciseOrder)
+  }, [customExercises, exerciseOrder])
 
   const getDaysAgo = (group) => {
     const lastDate = lastWorkouts[group]
