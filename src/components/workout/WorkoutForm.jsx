@@ -5,40 +5,6 @@ import { useAuth } from '../../context/AuthContext.jsx'
 import { getLastWorkoutByMuscleGroup } from '../../services/workoutService.js'
 import Button from '../common/Button.jsx'
 
-// Body part icons
-const bodyPartIcons = {
-  Chest: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-    </svg>
-  ),
-  Back: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  ),
-  Legs: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75" />
-    </svg>
-  ),
-  Shoulders: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
-    </svg>
-  ),
-  Arms: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-    </svg>
-  ),
-  Core: (
-    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25" />
-    </svg>
-  ),
-}
-
 export default function WorkoutForm({ onSave, saving = false }) {
   const [step, setStep] = useState('bodyPart')
   const [selectedBodyPart, setSelectedBodyPart] = useState(null)
@@ -81,9 +47,14 @@ export default function WorkoutForm({ onSave, saving = false }) {
     setStep('sets')
   }
 
+  const isTimedExercise = selectedExercise?.type === 'timed'
+
   const handleSelectSets = (num) => {
     setNumSets(num)
-    setSetsData(Array(num).fill(null).map(() => ({ reps: '', weight: '' })))
+    const initialData = isTimedExercise
+      ? { minutes: '', seconds: '' }
+      : { reps: '', weight: '' }
+    setSetsData(Array(num).fill(null).map(() => ({ ...initialData })))
     setStep('input')
   }
 
@@ -108,12 +79,22 @@ export default function WorkoutForm({ onSave, saving = false }) {
   }
 
   const handleSubmit = () => {
-    const validSets = setsData
-      .map(s => ({
-        reps: parseInt(s.reps) || 0,
-        weight: parseFloat(s.weight) || 0
-      }))
-      .filter(s => s.reps > 0 || s.weight > 0)
+    let validSets
+    if (isTimedExercise) {
+      validSets = setsData
+        .map(s => ({
+          minutes: parseInt(s.minutes) || 0,
+          seconds: parseInt(s.seconds) || 0
+        }))
+        .filter(s => s.minutes > 0 || s.seconds > 0)
+    } else {
+      validSets = setsData
+        .map(s => ({
+          reps: parseInt(s.reps) || 0,
+          weight: parseFloat(s.weight) || 0
+        }))
+        .filter(s => s.reps > 0 || s.weight > 0)
+    }
 
     if (validSets.length === 0) return
 
@@ -128,9 +109,9 @@ export default function WorkoutForm({ onSave, saving = false }) {
     })
   }
 
-  const isValid = setsData.some(s =>
-    (parseInt(s.reps) || 0) > 0 || (parseFloat(s.weight) || 0) > 0
-  )
+  const isValid = isTimedExercise
+    ? setsData.some(s => (parseInt(s.minutes) || 0) > 0 || (parseInt(s.seconds) || 0) > 0)
+    : setsData.some(s => (parseInt(s.reps) || 0) > 0 || (parseFloat(s.weight) || 0) > 0)
 
   const BackButton = () => (
     <button
@@ -157,15 +138,32 @@ export default function WorkoutForm({ onSave, saving = false }) {
                 key={group}
                 type="button"
                 onClick={() => handleSelectBodyPart(group)}
-                className={`animate-fade-in animate-fade-in-delay-${index + 1} group relative py-5 px-4 rounded-2xl border border-slate-700/50 bg-slate-800/30 hover:bg-slate-800/70 hover:border-cyan-500/30 transition-all duration-200 text-left overflow-hidden`}
+                className={`animate-fade-in animate-fade-in-delay-${index + 1} group relative h-40 px-4 rounded-2xl border border-slate-700/50 bg-slate-800/30 hover:bg-slate-800/70 hover:border-cyan-500/30 transition-all duration-200 text-left overflow-hidden flex items-end pb-4`}
               >
+                {/* Background images */}
+                {group === 'Chest' && (
+                  <img src="/images/pectoral.png" alt="" className="absolute inset-0 w-full h-full object-cover object-[center_30%] rounded-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                )}
+                {group === 'Shoulders' && (
+                  <img src="/images/shoulders.png" alt="" className="absolute inset-0 w-full h-full object-cover object-[center_30%] rounded-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                )}
+                {group === 'Back' && (
+                  <img src="/images/back.png" alt="" className="absolute inset-0 w-full h-full object-cover object-[center_30%] rounded-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                )}
+                {group === 'Legs' && (
+                  <img src="/images/legs.jpeg" alt="" className="absolute inset-0 w-full h-full object-cover object-[center_30%] rounded-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                )}
+                {group === 'Arms' && (
+                  <img src="/images/biceps.jpeg" alt="" className="absolute inset-0 w-full h-full object-cover object-[center_30%] rounded-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                )}
+                {group === 'Core' && (
+                  <img src="/images/core.png" alt="" className="absolute inset-0 w-full h-full object-cover object-[center_30%] rounded-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                )}
+
                 {/* Glow effect on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-cyan-500/0 group-hover:from-cyan-500/5 group-hover:to-transparent transition-all duration-300" />
 
                 <div className="relative">
-                  <div className="text-slate-400 group-hover:text-cyan-400 transition-colors mb-2">
-                    {bodyPartIcons[group]}
-                  </div>
                   <div className="text-white font-semibold text-lg">{group}</div>
                   {daysAgo && (
                     <div className="text-slate-500 text-sm mt-1">{daysAgo}</div>
@@ -261,31 +259,66 @@ export default function WorkoutForm({ onSave, saving = false }) {
               </div>
 
               <div className="flex-1 flex items-center gap-3">
-                <div className="flex-1">
-                  <label className="text-slate-500 text-xs uppercase tracking-wider mb-1 block">Reps</label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={set.reps}
-                    onChange={(e) => handleUpdateSet(index, 'reps', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-600 text-center text-lg font-semibold focus:outline-none focus:border-cyan-500/50 focus:bg-slate-900 transition-all"
-                    inputMode="numeric"
-                  />
-                </div>
+                {isTimedExercise ? (
+                  <>
+                    <div className="flex-1">
+                      <label className="text-slate-500 text-xs uppercase tracking-wider mb-1 block">Min</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={set.minutes}
+                        onChange={(e) => handleUpdateSet(index, 'minutes', e.target.value)}
+                        className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-600 text-center text-lg font-semibold focus:outline-none focus:border-cyan-500/50 focus:bg-slate-900 transition-all"
+                        inputMode="numeric"
+                        min="0"
+                      />
+                    </div>
 
-                <span className="text-slate-600 text-2xl font-light mt-5">×</span>
+                    <span className="text-slate-600 text-2xl font-light mt-5">:</span>
 
-                <div className="flex-1">
-                  <label className="text-slate-500 text-xs uppercase tracking-wider mb-1 block">{units}</label>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={set.weight}
-                    onChange={(e) => handleUpdateSet(index, 'weight', e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-600 text-center text-lg font-semibold focus:outline-none focus:border-cyan-500/50 focus:bg-slate-900 transition-all"
-                    inputMode="decimal"
-                  />
-                </div>
+                    <div className="flex-1">
+                      <label className="text-slate-500 text-xs uppercase tracking-wider mb-1 block">Sec</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={set.seconds}
+                        onChange={(e) => handleUpdateSet(index, 'seconds', e.target.value)}
+                        className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-600 text-center text-lg font-semibold focus:outline-none focus:border-cyan-500/50 focus:bg-slate-900 transition-all"
+                        inputMode="numeric"
+                        min="0"
+                        max="59"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex-1">
+                      <label className="text-slate-500 text-xs uppercase tracking-wider mb-1 block">Reps</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={set.reps}
+                        onChange={(e) => handleUpdateSet(index, 'reps', e.target.value)}
+                        className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-600 text-center text-lg font-semibold focus:outline-none focus:border-cyan-500/50 focus:bg-slate-900 transition-all"
+                        inputMode="numeric"
+                      />
+                    </div>
+
+                    <span className="text-slate-600 text-2xl font-light mt-5">×</span>
+
+                    <div className="flex-1">
+                      <label className="text-slate-500 text-xs uppercase tracking-wider mb-1 block">{units}</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={set.weight}
+                        onChange={(e) => handleUpdateSet(index, 'weight', e.target.value)}
+                        className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-600 text-center text-lg font-semibold focus:outline-none focus:border-cyan-500/50 focus:bg-slate-900 transition-all"
+                        inputMode="decimal"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ))}
