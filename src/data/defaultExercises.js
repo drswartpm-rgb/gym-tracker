@@ -48,11 +48,11 @@ export const defaultExercises = [
   { id: 'dips', name: 'Dips', muscleGroup: 'Arms' },
 
   // Core
-  { id: 'plank', name: 'Plank', muscleGroup: 'Core' },
+  { id: 'plank', name: 'Plank', muscleGroup: 'Core', type: 'timed' },
   { id: 'crunches', name: 'Crunches', muscleGroup: 'Core' },
   { id: 'russian-twists', name: 'Russian Twists', muscleGroup: 'Core' },
   { id: 'leg-raises', name: 'Leg Raises', muscleGroup: 'Core' },
-  { id: 'mountain-climbers', name: 'Mountain Climbers', muscleGroup: 'Core' },
+  { id: 'mountain-climbers', name: 'Mountain Climbers', muscleGroup: 'Core', type: 'repsPerSide' },
   { id: 'dead-bug', name: 'Dead Bug', muscleGroup: 'Core' },
   { id: 'bicycle-crunches', name: 'Bicycle Crunches', muscleGroup: 'Core' },
   { id: 'cable-woodchop', name: 'Cable Woodchop', muscleGroup: 'Core' },

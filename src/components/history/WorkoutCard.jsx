@@ -128,13 +128,25 @@ export default function WorkoutCard({ workout, onDelete, onUpdateDate }) {
                 {exercise.sets.map((set, j) => (
                   <div key={j} className="flex items-center gap-3 text-sm">
                     <span className="w-6 h-6 rounded-md bg-slate-800/70 flex items-center justify-center text-slate-500 text-xs font-medium">{j + 1}</span>
-                    <span className="text-slate-300">
-                      <span className="font-semibold text-white">{set.reps}</span> reps
-                    </span>
-                    <span className="text-slate-600">×</span>
-                    <span className="text-slate-300">
-                      <span className="font-semibold text-white">{set.weight}</span> {units}
-                    </span>
+                    {set.perSide ? (
+                      <span className="text-slate-300">
+                        <span className="font-semibold text-white">{set.reps}</span> reps/side
+                      </span>
+                    ) : set.minutes !== undefined ? (
+                      <span className="text-slate-300">
+                        <span className="font-semibold text-white">{set.minutes}:{String(set.seconds).padStart(2, '0')}</span>
+                      </span>
+                    ) : (
+                      <>
+                        <span className="text-slate-300">
+                          <span className="font-semibold text-white">{set.reps}</span> reps
+                        </span>
+                        <span className="text-slate-600">×</span>
+                        <span className="text-slate-300">
+                          <span className="font-semibold text-white">{set.weight}</span> {units}
+                        </span>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

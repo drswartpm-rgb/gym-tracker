@@ -48,12 +48,15 @@ export default function WorkoutForm({ onSave, saving = false }) {
   }
 
   const isTimedExercise = selectedExercise?.type === 'timed'
+  const isRepsPerSide = selectedExercise?.type === 'repsPerSide'
 
   const handleSelectSets = (num) => {
     setNumSets(num)
     const initialData = isTimedExercise
       ? { minutes: '', seconds: '' }
-      : { reps: '', weight: '' }
+      : isRepsPerSide
+        ? { reps: '' }
+        : { reps: '', weight: '' }
     setSetsData(Array(num).fill(null).map(() => ({ ...initialData })))
     setStep('input')
   }
@@ -87,6 +90,13 @@ export default function WorkoutForm({ onSave, saving = false }) {
           seconds: parseInt(s.seconds) || 0
         }))
         .filter(s => s.minutes > 0 || s.seconds > 0)
+    } else if (isRepsPerSide) {
+      validSets = setsData
+        .map(s => ({
+          reps: parseInt(s.reps) || 0,
+          perSide: true
+        }))
+        .filter(s => s.reps > 0)
     } else {
       validSets = setsData
         .map(s => ({
@@ -111,7 +121,7 @@ export default function WorkoutForm({ onSave, saving = false }) {
 
   const isValid = isTimedExercise
     ? setsData.some(s => (parseInt(s.minutes) || 0) > 0 || (parseInt(s.seconds) || 0) > 0)
-    : setsData.some(s => (parseInt(s.reps) || 0) > 0 || (parseFloat(s.weight) || 0) > 0)
+    : setsData.some(s => (parseInt(s.reps) || 0) > 0 || (isRepsPerSide ? true : (parseFloat(s.weight) || 0) > 0))
 
   const BackButton = () => (
     <button
@@ -290,6 +300,18 @@ export default function WorkoutForm({ onSave, saving = false }) {
                       />
                     </div>
                   </>
+                ) : isRepsPerSide ? (
+                  <div className="flex-1">
+                    <label className="text-slate-500 text-xs uppercase tracking-wider mb-1 block">Reps / side</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={set.reps}
+                      onChange={(e) => handleUpdateSet(index, 'reps', e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-600 text-center text-lg font-semibold focus:outline-none focus:border-cyan-500/50 focus:bg-slate-900 transition-all"
+                      inputMode="numeric"
+                    />
+                  </div>
                 ) : (
                   <>
                     <div className="flex-1">
